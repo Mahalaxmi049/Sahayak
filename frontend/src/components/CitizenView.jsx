@@ -3,8 +3,9 @@ import {
   ShieldCheck, Clock, Eye, Download, Phone, Landmark, Lock,
   CheckCircle2, XCircle, AlertTriangle, Loader2, Copy, Check,
   Mic, MicOff, Target, ClipboardList, ShieldAlert, Info,
+  FileText, GraduationCap, HeartPulse, FileCheck, RefreshCw, UserCheck, UserPlus, Building2, Layers
 } from 'lucide-react';
-import { T, actionKey, helperTypeKey } from '../i18n';
+import { T, actionKey, helperTypeKey, servicesList } from '../i18n';
 import {
   getCitizen, getHelpers, getCitizenPasses, createPass, getPass,
   revokePass, getPendingStepUps, resolveStepUp, getAudit, getSummary,
@@ -12,7 +13,33 @@ import {
 } from '../api';
 
 const CITIZEN_ID = 1; // Seeded demo citizen
-const ICONS = { view_pension_status: Eye, download_pension_certificate: Download, update_mobile_number: Phone, change_bank_account: Landmark };
+
+const SERVICE_ICONS = {
+  welfare_pensions: Landmark,
+  certificates_documents: FileText,
+  education_scholarships: GraduationCap,
+  health_services: HeartPulse,
+};
+
+const ICONS = {
+  view_pension_status: Eye,
+  download_pension_certificate: Download,
+  update_mobile_number: Phone,
+  change_bank_account: Landmark,
+  view_certificate_status: FileCheck,
+  download_issued_certificate: Download,
+  request_certificate_reissuance: RefreshCw,
+  modify_certificate_details: UserCheck,
+  view_scholarship_status: GraduationCap,
+  download_scholarship_sanction: Download,
+  update_disbursement_bank: Landmark,
+  modify_student_profile: UserCheck,
+  view_health_coverage: HeartPulse,
+  download_abha_card: Download,
+  link_new_beneficiary: UserPlus,
+  update_primary_health_center: Building2,
+};
+
 const fmt = (n) => {
   const s = Math.max(0, n);
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
@@ -44,6 +71,7 @@ export default function CitizenView({ lang, setLang, passToken, setPassToken, pa
 
   /* ── Form state ── */
   const [selectedHelper, setSelectedHelper] = useState('');
+  const [selectedService, setSelectedService] = useState('welfare_pensions');
   const [selectedActions, setSelectedActions] = useState([]);
   const [duration, setDuration] = useState(30);
 
@@ -255,6 +283,11 @@ export default function CitizenView({ lang, setLang, passToken, setPassToken, pa
 
               <div className="stepup-meta">
                 <div><strong>{t.requestedBy}:</strong> {helperName} — {t[helperTypeKey[helperType]] || helperType}</div>
+                <div><strong>{t.serviceLabel}:</strong> {(() => {
+                  const pAct = actions.find(a => a.action === pending[0].action);
+                  const pSrv = servicesList.find(s => s.id === pAct?.service) || servicesList[0];
+                  return t[pSrv.labelKey];
+                })()}</div>
                 <div><strong>Pass:</strong> Sahayak Pass</div>
                 <div><strong>{t.requestedAt}:</strong> {asUTC(pending[0].created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
@@ -474,58 +507,95 @@ export default function CitizenView({ lang, setLang, passToken, setPassToken, pa
             </select>
           </div>
 
-          {/* STEP 2: Choose actions */}
+          {/* STEP 2: Choose public service & permitted tasks */}
           <div className="step">
             <div className="step-label">
               <span className="step-num">2</span>
               {t.step2}
             </div>
 
-            {/* Low risk */}
+            {/* Service selector tabs */}
+            <div className="service-selector">
+              <div className="service-selector-label">
+                <Layers />
+                <span>{t.serviceSelector}</span>
+              </div>
+              <div className="service-grid">
+                {servicesList.map((srv) => {
+                  const SrvIcon = SERVICE_ICONS[srv.id] || Landmark;
+                  const countInSrv = actions.filter((a) => a.service === srv.id && selectedActions.includes(a.action)).length;
+                  return (
+                    <button
+                      key={srv.id}
+                      type="button"
+                      className={`service-card-btn ${selectedService === srv.id ? 'active' : ''}`}
+                      onClick={() => setSelectedService(srv.id)}
+                    >
+                      <div className="service-card-title">
+                        <SrvIcon />
+                        <span>{t[srv.labelKey]}</span>
+                        {countInSrv > 0 && (
+                          <span className="badge badge-active" style={{ marginLeft: 'auto', fontSize: '.68rem' }}>
+                            {countInSrv}
+                          </span>
+                        )}
+                      </div>
+                      <div className="service-card-desc">{t[srv.descKey]}</div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Low risk for selected service */}
             <div className="risk-section low">
               <CheckCircle2 /> {t.lowRisk}
             </div>
-            {lowRisk.map((a) => {
-              const Icon = ICONS[a.action] || Eye;
-              return (
-                <label
-                  key={a.action}
-                  className={`action-checkbox ${selectedActions.includes(a.action) ? 'checked' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedActions.includes(a.action)}
-                    onChange={() => toggleAction(a.action)}
-                  />
-                  <Icon />
-                  <span className="action-label">{a.label}</span>
-                  <span className="badge badge-low">{t.lowRisk}</span>
-                </label>
-              );
-            })}
+            {lowRisk
+              .filter((a) => (a.service || 'welfare_pensions') === selectedService)
+              .map((a) => {
+                const Icon = ICONS[a.action] || Eye;
+                return (
+                  <label
+                    key={a.action}
+                    className={`action-checkbox ${selectedActions.includes(a.action) ? 'checked' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedActions.includes(a.action)}
+                      onChange={() => toggleAction(a.action)}
+                    />
+                    <Icon />
+                    <span className="action-label">{a.label}</span>
+                    <span className="badge badge-low">{t.lowRisk}</span>
+                  </label>
+                );
+              })}
 
-            {/* High risk */}
+            {/* High risk for selected service */}
             <div className="risk-section high">
               <Lock /> {t.highRisk}
             </div>
-            {highRisk.map((a) => {
-              const Icon = ICONS[a.action] || Landmark;
-              return (
-                <label
-                  key={a.action}
-                  className={`action-checkbox ${selectedActions.includes(a.action) ? 'checked' : ''}`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedActions.includes(a.action)}
-                    onChange={() => toggleAction(a.action)}
-                  />
-                  <Icon />
-                  <span className="action-label">{a.label}</span>
-                  <span className="badge badge-high"><Lock style={{ width: 10, height: 10 }} /> {t.highRiskNote}</span>
-                </label>
-              );
-            })}
+            {highRisk
+              .filter((a) => (a.service || 'welfare_pensions') === selectedService)
+              .map((a) => {
+                const Icon = ICONS[a.action] || Landmark;
+                return (
+                  <label
+                    key={a.action}
+                    className={`action-checkbox ${selectedActions.includes(a.action) ? 'checked' : ''}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedActions.includes(a.action)}
+                      onChange={() => toggleAction(a.action)}
+                    />
+                    <Icon />
+                    <span className="action-label">{a.label}</span>
+                    <span className="badge badge-high"><Lock style={{ width: 10, height: 10 }} /> {t.highRiskNote}</span>
+                  </label>
+                );
+              })}
           </div>
 
           {/* STEP 3: Duration */}

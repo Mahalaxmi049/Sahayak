@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { ShieldCheck, RotateCcw } from 'lucide-react';
+import { ShieldCheck, RotateCcw, ArrowRight, Layers } from 'lucide-react';
 import { T } from './i18n';
 import { resetDemo } from './api';
 import CitizenView from './components/CitizenView';
@@ -23,7 +23,6 @@ function App() {
       setPassToken('');
       setPassId(null);
       setView('citizen');
-      // Force re-render by reloading — cleanest reset for demo
       window.location.reload();
     } catch {
       setResetting(false);
@@ -32,7 +31,7 @@ function App() {
 
   return (
     <>
-      {/* ── Header ── */}
+      {/* ── Top Header ── */}
       <header className="app-header">
         <div className="nav-brand">
           <ShieldCheck />
@@ -75,6 +74,25 @@ function App() {
 
       {/* ── Content ── */}
       <main className="app-content">
+        {/* Core Architecture Pipeline Pill */}
+        <div className="arch-banner">
+          <Layers />
+          <span><strong>Architecture:</strong></span>
+          <span className="arch-pipeline-pill">Service</span>
+          <ArrowRight style={{ width: 12, height: 12 }} />
+          <span className="arch-pipeline-pill">Action</span>
+          <ArrowRight style={{ width: 12, height: 12 }} />
+          <span className="arch-pipeline-pill">Risk Level</span>
+          <ArrowRight style={{ width: 12, height: 12 }} />
+          <span className="arch-pipeline-pill" style={{ background: '#d4eddc', color: '#1B5E3B' }}>Sahayak Pass Scoped Access</span>
+        </div>
+
+        {/* Reusable Delegation Notice */}
+        <div className="reusable-banner">
+          <ShieldCheck />
+          <span>{t.reusableNotice}</span>
+        </div>
+
         {view === 'citizen' ? (
           <CitizenView
             lang={lang}
@@ -91,6 +109,11 @@ function App() {
             setPassToken={setPassToken}
           />
         )}
+
+        {/* Subtle Prototype Disclaimer */}
+        <footer className="subtle-disclaimer">
+          {t.disclaimer}
+        </footer>
       </main>
     </>
   );

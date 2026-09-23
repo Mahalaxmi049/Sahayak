@@ -5,7 +5,28 @@ from sqlalchemy.orm import Session
 from .models import AuditLog, Pass, StepUpRequest
 from .services.mock_pension import execute
 
-RISK = {"view_pension_status":"LOW", "download_pension_certificate":"LOW", "update_mobile_number":"HIGH", "change_bank_account":"HIGH"}
+RISK = {
+    # Welfare & Pensions
+    "view_pension_status": "LOW",
+    "download_pension_certificate": "LOW",
+    "update_mobile_number": "HIGH",
+    "change_bank_account": "HIGH",
+    # Certificates & Documents
+    "view_certificate_status": "LOW",
+    "download_issued_certificate": "LOW",
+    "request_certificate_reissuance": "HIGH",
+    "modify_certificate_details": "HIGH",
+    # Education & Scholarships
+    "view_scholarship_status": "LOW",
+    "download_scholarship_sanction": "LOW",
+    "update_disbursement_bank": "HIGH",
+    "modify_student_profile": "HIGH",
+    # Health Services
+    "view_health_coverage": "LOW",
+    "download_abha_card": "LOW",
+    "link_new_beneficiary": "HIGH",
+    "update_primary_health_center": "HIGH",
+}
 def now(): return datetime.utcnow()
 def log(db: Session, pass_id: int, actor: str, event: str, detail: str = ""):
     db.add(AuditLog(pass_id=pass_id, actor=actor, event=event, detail=detail, timestamp=now()))
