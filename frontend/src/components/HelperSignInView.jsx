@@ -1,24 +1,45 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Building2, Info } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ShieldCheck } from 'lucide-react';
 import { T } from '../i18n';
 
 export default function HelperSignInView({
   lang,
+  helpers = [],
   onBack,
   onSignInSuccess,
 }) {
   const t = T[lang] || T.en;
 
-  const demoHelpers = [
-    { id: 1, name: 'Ravi Kumar', role: t.typeCsc || 'CSC Operator', desc: 'Service Centre' },
-    { id: 2, name: 'Anil Kumar', role: t.typeFamily || 'Family Member', desc: 'Son · Primary Contact' },
-    { id: 3, name: 'Meena', role: t.typeNeighbour || 'Neighbour', desc: 'Community Volunteer' },
-  ];
+  const helperRoles = {
+    csc_operator: t.typeCsc || 'CSC Operator',
+    family: t.typeFamily || 'Family member',
+    neighbour: t.typeNeighbour || 'Trusted neighbour',
+  };
 
-  const [selectedId, setSelectedId] = useState(1);
+  const helperDescs = {
+    csc_operator: 'Village Service Centre · Counter #3',
+    family: 'Son · Primary Contact',
+    neighbour: 'Trusted Community Volunteer',
+  };
+
+  const list = helpers.length > 0
+    ? helpers.map((h) => ({
+        id: h.id,
+        name: h.name,
+        role: helperRoles[h.helper_type] || h.helper_type,
+        desc: helperDescs[h.helper_type] || 'Authorized Helper',
+        type: h.helper_type,
+      }))
+    : [
+        { id: 1, name: 'Ravi Kumar', role: t.typeCsc || 'CSC Operator', desc: 'Village Service Centre · Counter #3', type: 'csc_operator' },
+        { id: 2, name: 'Anil Kumar', role: t.typeFamily || 'Family member', desc: 'Son · Primary Contact', type: 'family' },
+        { id: 3, name: 'Meena', role: t.typeNeighbour || 'Trusted neighbour', desc: 'Trusted Community Volunteer', type: 'neighbour' },
+      ];
+
+  const [selectedId, setSelectedId] = useState(list[0]?.id || 1);
 
   const handleContinue = () => {
-    const selected = demoHelpers.find((h) => h.id === selectedId) || demoHelpers[0];
+    const selected = list.find((h) => h.id === selectedId) || list[0];
     onSignInSuccess(selected);
   };
 
@@ -30,21 +51,14 @@ export default function HelperSignInView({
       </button>
 
       <div className="screen-header">
-        <h2>{t.appName || 'Sahayak Pass'}</h2>
-        <p className="screen-subtext">{t.helperCscSignIn || 'Helper / CSC · Demo sign-in'}</p>
-      </div>
-
-      <div className="simulation-note">
-        <Info size={16} className="text-subtle" style={{ flexShrink: 0, marginTop: 2 }} />
-        <span>
-          {t.demoAuthNote || 'Demo authentication only. No real credentials collected.'}
-        </span>
+        <h2>{t.signInTitle || 'Sign in to Sahayak Pass'}</h2>
+        <p className="screen-subtext">{t.signInSub || 'Select a profile to continue and explore assisted access.'}</p>
       </div>
 
       <div className="form-field">
-        <label className="form-label">{t.chooseDemoHelper || 'Choose a demo helper account'}</label>
+        <label className="form-label">{t.chooseHelperAccount || 'Select your helper profile:'}</label>
         <div className="profiles-list">
-          {demoHelpers.map((h) => {
+          {list.map((h) => {
             const isSelected = h.id === selectedId;
             return (
               <div
@@ -76,9 +90,10 @@ export default function HelperSignInView({
         <ArrowRight size={16} />
       </button>
 
-      <p className="welcome-footer-note" style={{ margin: '18px auto 0 auto' }}>
-        {t.demoModeSimulated || 'Demo mode — authentication is simulated.'}
-      </p>
+      <div className="prototype-disclaimer-box">
+        <ShieldCheck size={14} className="text-subtle" style={{ flexShrink: 0, marginTop: 2 }} />
+        <span>{t.prototypeDisclaimer}</span>
+      </div>
     </div>
   );
 }

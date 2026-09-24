@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, ArrowRight, User, Clock } from 'lucide-react';
-import { T } from '../i18n';
+import { ArrowRight, User, Clock, ShieldCheck, Check, Lock } from 'lucide-react';
+import { T, getServiceIdFromActions, getServiceLabel, actionKey } from '../i18n';
 import { asUTC } from '../api';
 
 export default function HelperHomeView({
@@ -14,8 +14,20 @@ export default function HelperHomeView({
   const t = T[lang] || T.en;
 
   const helperName = helper?.name || 'Ravi Kumar';
-  const citizenName = citizen?.name || 'Savitri Devi';
-  const serviceName = t.srvWelfarePensions || 'Welfare & Pensions';
+  const citizenName = citizen?.name || activePass?.citizen_name || 'Savitri Devi';
+
+  const serviceId = activePass?.service || getServiceIdFromActions(activePass?.allowed_actions);
+  const serviceName = getServiceLabel(serviceId, t);
+
+  const allowedActions = activePass?.allowed_actions || [];
+
+  const lowRiskActions = allowedActions.filter((a) =>
+    !['change_bank_account', 'update_mobile_number', 'request_certificate_reissuance', 'modify_certificate_details', 'update_disbursement_bank', 'modify_student_profile', 'link_new_beneficiary', 'update_primary_health_center', 'modify_citizen_information'].includes(a)
+  );
+
+  const sensitiveActions = allowedActions.filter((a) =>
+    ['change_bank_account', 'update_mobile_number', 'request_certificate_reissuance', 'modify_certificate_details', 'update_disbursement_bank', 'modify_student_profile', 'link_new_beneficiary', 'update_primary_health_center', 'modify_citizen_information'].includes(a)
+  );
 
   /* ── Live Countdown ── */
   const [countdown, setCountdown] = useState('');
@@ -55,17 +67,17 @@ export default function HelperHomeView({
   return (
     <div className="helper-home">
       <div className="screen-header">
-        <h2>{t.assistedServicesTitle || 'Assisted Services'}</h2>
+        <h2>{t.navAssistedSessions || 'Assisted Sessions'}</h2>
         <p className="screen-subtext">
-          {t.peopleGivenPermissionToHelp || 'People who have given you permission to help.'}
+          People who have granted you permission to assist them with digital public services.
         </p>
       </div>
 
       {!hasActive ? (
         <div className="empty-state-simple" style={{ padding: '36px 20px' }}>
-          <strong>{t.noAssistedSessions || 'No active assisted-service sessions.'}</strong>
-          <p style={{ maxWidth: 400, margin: '6px auto 16px auto' }}>
-            {t.noAssistedSessionsDesc || 'Ask the citizen to grant you time-limited permission from their Citizen screen.'}
+          <strong>No active assisted-service sessions.</strong>
+          <p style={{ maxWidth: 420, margin: '6px auto 16px auto' }}>
+            When a citizen creates an access pass choosing you as their helper, the session will appear here.
           </p>
           {onSwitchToCitizen && (
             <button
@@ -73,33 +85,61 @@ export default function HelperHomeView({
               className="btn btn-secondary"
               onClick={onSwitchToCitizen}
             >
-              <span>{t.switchToCitizenBtn || 'Switch to Citizen'} →</span>
+              <span>{t.continueCitizen || 'Continue as Citizen'} →</span>
             </button>
           )}
         </div>
       ) : (
-        <div className="helper-session-card">
-          <div>
-            <strong style={{ display: 'block', fontSize: '1.05rem', color: 'var(--text-main)' }}>
-              {citizenName}
-            </strong>
-            <span style={{ fontSize: '0.86rem', color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>
-              {serviceName}
-            </span>
-            <div className="active-status-row" style={{ marginTop: 6 }}>
+        <div className="helper-session-card-detailed">
+          <div className="session-card-top-row">
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <User size={16} style={{ color: 'var(--color-primary)' }} />
+                <strong style={{ fontSize: '1.1rem', color: 'var(--text-main)' }}>
+                  {citizenName}
+                </strong>
+              </div>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-muted)', display: 'block', marginTop: 2 }}>
+                Service: <strong>{serviceName}</strong>
+              </span>
+            </div>
+
+            <div className="active-status-badge">
               <span className="status-dot-active" />
-              <span>{t.accessActive || 'Access active'} · {t.expiresIn || 'Expires in'} {countdown || '27 minutes'}</span>
+              <span>Active · Expires in {countdown}</span>
             </div>
           </div>
 
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={onOpenService}
-          >
-            <span>{t.openServiceBtn || 'Open service'}</span>
-            <ArrowRight size={16} />
-          </button>
+          <div className="session-card-body-preview">
+            <div style={{ fontSize: '0.82rem', color: 'var(--text-subtle)', marginBottom: 4 }}>
+              Authorized tasks ({allowedActions.length}):
+            </div>
+            <div className="session-actions-preview-list">
+              {lowRiskActions.map((a) => (
+                <span key={a} className="action-pill-preview">
+                  <Check size={12} style={{ color: 'var(--color-primary)' }} />
+                  {t[actionKey[a]] || a.replace(/_/g, ' ')}
+                </span>
+              ))}
+              {sensitiveActions.map((a) => (
+                <span key={a} className="action-pill-preview sensitive">
+                  <Lock size={12} style={{ color: 'var(--color-amber)' }} />
+                  {t[actionKey[a]] || a.replace(/_/g, ' ')} (Needs approval)
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: 14, display: 'flex', justifyContent: 'flex-end' }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={onOpenService}
+            >
+              <span>Open Service Counter</span>
+              <ArrowRight size={16} />
+            </button>
+          </div>
         </div>
       )}
     </div>

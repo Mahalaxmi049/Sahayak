@@ -53,7 +53,7 @@ export default function HowItWorksModal({ lang, onClose }) {
         </div>
 
         <div className="panel-subtle" style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-          {t.disclaimer}
+          {t.prototypeDisclaimer}
         </div>
 
         <button type="button" className="btn btn-primary btn-full" onClick={onClose}>

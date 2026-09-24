@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Clock, AlertTriangle, ArrowRight, ShieldCheck } from 'lucide-react';
-import { T, actionKey } from '../i18n';
+import { T, actionKey, getServiceIdFromActions, getServiceLabel } from '../i18n';
 import { asUTC } from '../api';
 
 export default function CitizenHomeView({
@@ -56,7 +56,8 @@ export default function CitizenHomeView({
   const hasActive = activePass && activePass.status === 'active' && !isExpired;
   const helperName = activePass?.helper_name || 'Ravi Kumar';
   const helperRole = activePass?.helper_type === 'family' ? (t.typeFamily || 'Family member') : (t.typeCsc || 'CSC Operator');
-  const serviceName = t.srvWelfarePensions || 'Welfare & Pensions';
+  const serviceId = activePass?.service || getServiceIdFromActions(activePass?.allowed_actions);
+  const serviceName = getServiceLabel(serviceId, t);
 
   const pendingRequest = pendingStepUps[0];
 
@@ -65,7 +66,7 @@ export default function CitizenHomeView({
       {/* ── Greeting ── */}
       <div className="home-greeting">
         <h1>{t.greeting ? t.greeting.replace('{name}', firstName) : `Good morning, ${firstName}`}</h1>
-        <p>{t.howCanWeHelp || 'How can we help you today?'}</p>
+        <p>{t.dashboardPurpose || 'What do you need help with?'}</p>
       </div>
 
       {/* ── Urgent Step-Up Approval Banner ── */}
@@ -77,10 +78,10 @@ export default function CitizenHomeView({
                 {t.approvalNeeded || 'Approval needed'}
               </span>
               <strong style={{ display: 'block', fontSize: '1rem', color: '#78350f' }}>
-                {helperName} {t.wantsToPerformAction || 'wants to perform a sensitive action'}:
+                {helperName} {t.wantsToPerformAction || 'is requesting permission for a sensitive task'}:
               </strong>
               <span style={{ fontSize: '0.9rem', color: '#92400e', fontWeight: 600 }}>
-                {t[actionKey[pendingRequest.action]] || pendingRequest.action.replace(/_/g, ' ').toUpperCase()}
+                {t[actionKey[pendingRequest.action]] || pendingRequest.action.replace(/_/g, ' ')}
               </span>
             </div>
             <button
@@ -98,8 +99,8 @@ export default function CitizenHomeView({
       {/* ── Primary Action: Get Help ── */}
       <div className="get-help-action-card">
         <div className="get-help-text">
-          <strong>+ {t.getHelpWithService || 'Get help with a service'}</strong>
-          <span>{t.getHelpSubtitle || 'Give a trusted person limited access to complete a task for you.'}</span>
+          <strong>+ {t.getHelpBtn || 'Get Help'}</strong>
+          <span>{t.needHelpDesc || 'Give a trusted person limited permission to complete a task for you.'}</span>
         </div>
         <button
           type="button"
