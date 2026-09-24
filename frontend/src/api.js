@@ -19,7 +19,9 @@ export async function request(path, opts = {}) {
 /* ── Citizen endpoints ── */
 
 export const getCitizen = (id) => request(`/citizens/${id}`);
+export const getCitizens = () => request('/citizens');
 export const getHelpers = () => request('/helpers');
+export const createHelper = (body) => request('/helpers', { method: 'POST', body: JSON.stringify(body) });
 export const getCitizenPasses = (citizenId) => request(`/citizen/${citizenId}/passes`);
 export const createPass = (body) => request('/passes', { method: 'POST', body: JSON.stringify(body) });
 export const getPass = (id) => request(`/passes/${id}`);
@@ -32,6 +34,7 @@ export const getSummary = (passId, lang) => request(`/passes/${passId}/summary?l
 
 /* ── Helper endpoints ── */
 
+export const getHelperSessions = (helperId) => request(`/helper/${helperId}/sessions`);
 export const helperAct = (token, action) =>
   request('/helper/act', { method: 'POST', headers: { 'X-Pass-Token': token }, body: JSON.stringify({ action }) });
 export const getStepUp = (token, stepUpId) =>
